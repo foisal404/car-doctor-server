@@ -34,6 +34,7 @@ async function run() {
     await client.connect();
     const carDoctorDB = client.db("carDoctorDB");
     const servicesCollection = carDoctorDB.collection("servicesCollection");
+    const bookings = carDoctorDB.collection("bookings");
 
     app.get('/services',async(req,res)=>{
         const cursor = servicesCollection.find();
@@ -46,6 +47,20 @@ async function run() {
       const query = { _id : new ObjectId(id) };
       const result = await servicesCollection.findOne(query);
       res.send(result)
+    })
+    app.post('/bookings',async(req,res)=>{
+      const data=req.body;
+      // const doc = {
+      //   email:data.email,
+      //   name:data.name,
+      //   date:data.date,
+      //   price:data.price,
+      //   img:data.img
+      // }
+      const result = await bookings.insertOne(data);
+      // console.log(data)
+      res.send(result)
+
     })
     app.get('/bookings',async(req,res)=>{
       // const data=req.query
