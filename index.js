@@ -62,9 +62,15 @@ async function run() {
       res.send(result)
 
     })
-    app.get('/bookings',async(req,res)=>{
-      // const data=req.query
-      // console.log(data)
+    app.get("/bookings",async(req,res)=>{
+      let query="";
+      if(req.query){
+        query=req.query
+      }
+      console.log(query)
+      const cursor = bookings.find(query);
+      const result=await cursor.toArray();
+      res.send(result)
     })
     // Send a ping to confirm a successful connection
     await client.db("admin").command({ ping: 1 });
