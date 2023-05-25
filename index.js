@@ -48,20 +48,22 @@ async function run() {
       const result = await servicesCollection.findOne(query);
       res.send(result)
     })
+    //for add 
     app.post('/bookings',async(req,res)=>{
       const data=req.body;
-      // const doc = {
-      //   email:data.email,
-      //   name:data.name,
-      //   date:data.date,
-      //   price:data.price,
-      //   img:data.img
-      // }
       const result = await bookings.insertOne(data);
       // console.log(data)
       res.send(result)
 
     })
+    //for delete
+    app.delete("/bookings/:id",async(req,res)=>{
+      const id=req.params.id;
+      const query = { _id: new ObjectId(id) };
+      const result = await bookings.deleteOne(query);
+      res.send(result)
+    })
+    // for read
     app.get("/bookings",async(req,res)=>{
       let query="";
       if(req.query){
