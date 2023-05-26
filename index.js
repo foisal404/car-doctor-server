@@ -2,6 +2,7 @@ const express = require('express');
 const cors = require('cors');
 const { MongoClient, ServerApiVersion, ObjectId } = require('mongodb');
 require('dotenv').config()
+var jwt = require('jsonwebtoken');
 const app=express();
 const port=process.env.PORT || 5000;
 //middleware
@@ -27,6 +28,23 @@ const client = new MongoClient(uri, {
     deprecationErrors: true,
   }
 });
+const verifyJWT=(req,res,next)=>{
+  console.log("hiting jwt");
+  // console.log(req.headers.authorization);
+  const authorization=req.headers.authorization;
+  if(!authorization){
+    return res.status(401).send({error: true,message :"Unauthorized Access"})
+  }
+  const token=authorization.split(' ')[1]
+  // console.log("jwt token ",token);
+  jwt.verify(token, process.env.Acces_Token_Secret, (err, decoded)=> {
+    if(err){
+      return res.status(403).send({error:true ,message:"Unauthorized Access"})
+    }
+    req.decoded=decoded;
+    next()
+  });
+}
 
 async function run() {
   try {
@@ -36,6 +54,15 @@ async function run() {
     const servicesCollection = carDoctorDB.collection("servicesCollection");
     const bookings = carDoctorDB.collection("bookings");
 
+    //jwt routes
+    app.post('/jwt',(req,res)=>{
+      const user=req.body;
+      // console.log(user);
+      const token=jwt.sign(user,process.env.Acces_Token_Secret, { expiresIn: '1h' })
+      res.send({token})
+    })
+
+    //Services routes
     app.get('/services',async(req,res)=>{
         const cursor = servicesCollection.find();
         const result=await cursor.toArray();
@@ -48,8 +75,9 @@ async function run() {
       const result = await servicesCollection.findOne(query);
       res.send(result)
     })
+    // Bookings Routes
     //for add 
-    app.post('/bookings',async(req,res)=>{
+    app.post('/bookings', async(req,res)=>{
       const data=req.body;
       const result = await bookings.insertOne(data);
       // console.log(data)
@@ -63,13 +91,14 @@ async function run() {
       const result = await bookings.deleteOne(query);
       res.send(result)
     })
-    // for read
-    app.get("/bookings",async(req,res)=>{
+    // for read 
+    app.get("/bookings",verifyJWT,async(req,res)=>{
+      console.log("came back after verify");
       let query="";
       if(req.query){
         query=req.query
       }
-      console.log(query)
+      // console.log(query)
       const cursor = bookings.find(query);
       const result=await cursor.toArray();
       res.send(result)
